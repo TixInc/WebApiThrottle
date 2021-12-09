@@ -62,6 +62,11 @@ namespace WebApiThrottle
         /// </summary>
         public bool IpThrottling { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether rate limiting is bypassed.
+        /// </summary>
+        public bool AllowPassThrough { get; set; }
+
         public List<string> IpWhitelist { get; set; }
 
         public IDictionary<string, RateLimits> IpRules { get; set; }
@@ -119,13 +124,13 @@ namespace WebApiThrottle
             foreach (var item in rules)
             {
                 var rateLimit = new RateLimits
-                                    {
-                                        PerSecond = item.LimitPerSecond,
-                                        PerMinute = item.LimitPerMinute,
-                                        PerHour = item.LimitPerHour,
-                                        PerDay = item.LimitPerDay,
-                                        PerWeek = item.LimitPerWeek
-                                    };
+                {
+                    PerSecond = item.LimitPerSecond,
+                    PerMinute = item.LimitPerMinute,
+                    PerHour = item.LimitPerHour,
+                    PerDay = item.LimitPerDay,
+                    PerWeek = item.LimitPerWeek
+                };
 
                 switch (item.PolicyType)
                 {

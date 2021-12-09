@@ -53,9 +53,9 @@ namespace WebApiThrottle
         /// <param name="ipAddressParser">
         /// The IpAddressParser
         /// </param>
-        public ThrottlingHandler(ThrottlePolicy policy, 
-            IPolicyRepository policyRepository, 
-            IThrottleRepository repository, 
+        public ThrottlingHandler(ThrottlePolicy policy,
+            IPolicyRepository policyRepository,
+            IThrottleRepository repository,
             IThrottleLogger logger,
             IIpAddressParser ipAddressParser = null)
         {
@@ -195,20 +195,24 @@ namespace WebApiThrottle
                             Logger.Log(core.ComputeLogEntry(requestId, identity, throttleCounter, rateLimitPeriod.ToString(), rateLimit, request));
                         }
 
-                        var message = !string.IsNullOrEmpty(this.QuotaExceededMessage) 
-                            ? this.QuotaExceededMessage 
-                            : "API calls quota exceeded! maximum admitted {0} per {1}.";
+                        // return quota exceeded response unless allow pass through is enabled
+                        if (!Policy.AllowPassThrough)
+                        {
+                            var message = !string.IsNullOrEmpty(this.QuotaExceededMessage)
+                                ? this.QuotaExceededMessage
+                                : "API calls quota exceeded! maximum admitted {0} per {1}.";
 
-                        var content = this.QuotaExceededContent != null
-                            ? this.QuotaExceededContent(rateLimit, rateLimitPeriod)
-                            : string.Format(message, rateLimit, rateLimitPeriod);
+                            var content = this.QuotaExceededContent != null
+                                ? this.QuotaExceededContent(rateLimit, rateLimitPeriod)
+                                : string.Format(message, rateLimit, rateLimitPeriod);
 
-                        // break execution
-                        return QuotaExceededResponse(
-                            request,
-                            content,
-                            QuotaExceededResponseCode,
-                            core.RetryAfterFrom(throttleCounter.Timestamp, rateLimitPeriod));
+                            // break execution
+                            return QuotaExceededResponse(
+                                request,
+                                content,
+                                QuotaExceededResponseCode,
+                                core.RetryAfterFrom(throttleCounter.Timestamp, rateLimitPeriod));
+                        }
                     }
                 }
             }
@@ -227,8 +231,8 @@ namespace WebApiThrottle
             var entry = new RequestIdentity();
             entry.ClientIp = core.GetClientIp(request).ToString();
             entry.Endpoint = request.RequestUri.AbsolutePath.ToLowerInvariant();
-            entry.ClientKey = request.Headers.Contains("Authorization-Token") 
-                ? request.Headers.GetValues("Authorization-Token").First() 
+            entry.ClientKey = request.Headers.Contains("Authorization-Token")
+                ? request.Headers.GetValues("Authorization-Token").First()
                 : "anon";
 
             return entry;
